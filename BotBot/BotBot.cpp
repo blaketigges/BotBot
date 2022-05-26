@@ -17,19 +17,37 @@ int main()
 
     /* Output simple log messages to stdout */
     bot.on_log(dpp::utility::cout_logger());
-
+	
     /* Handle slash command */
     bot.on_slashcommand([](const dpp::slashcommand_t& event) {
          if (event.command.get_command_name() == "beep") {
             event.reply("boop!");
          }
 		 if (event.command.get_command_name() == "info") {
-             event.reply(fmt::format("Name: {}\nID: {}\nHas Nitro: {}\nJoined on: {}\n",
-                 event.command.usr.username, 
-                 event.command.usr.id, 
-                 (event.command.usr.has_nitro_classic() || event.command.usr.has_nitro_full() ), 
-                 event.command.member.joined_at)); // figure out how to convert unix time to human readable time later
-             ));
+             dpp::embed info_embed = dpp::embed().
+                 set_color(dpp::colors::orange).
+                 set_title("Some name").
+                 set_author(event.command.usr.username + "#" + std::to_string(event.command.usr.discriminator), "https://google.com", event.command.usr.get_avatar_url()).
+                 set_description("Some description here").
+                 set_thumbnail(event.command.usr.get_avatar_url()).
+                 add_field(
+                     "Regular field title",
+                     "Some value here"
+                 ).
+                 add_field(
+                     "Inline field title",
+                     "Some value here",
+                     true
+                 ).
+                 add_field(
+                     "Inline field title",
+                     "Some value here",
+                     true
+                 ).
+                 set_footer(dpp::embed_footer().set_text( "ID: " + std::to_string(event.command.usr.id))).
+                 set_timestamp(time(0));
+			  event.reply(dpp::message().add_embed(info_embed));
+             
 		 }
 	});
 		
