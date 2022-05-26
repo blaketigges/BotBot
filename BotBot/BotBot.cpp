@@ -31,24 +31,22 @@ int main()
                  set_description("Some description here").
                  set_thumbnail(event.command.usr.get_avatar_url()).
                  add_field(
-                     "Regular field title",
-                     "Some value here"
+                     "Roles:",
+                     "@" + std::to_string(event.command.member.roles.at(0)) 
                  ).
                  add_field(
-                     "Inline field title",
-                     "Some value here",
-                     true
+                     "Join date",
+                     dpp::utility::timestamp((event.command.member.joined_at), dpp::utility::time_format::tf_long_datetime )
                  ).
                  add_field(
-                     "Inline field title",
-                     "Some value here",
-                     true
+                     "Registered", 
+                     dpp::utility::timestamp((event.command.usr.get_creation_time()), dpp::utility::time_format::tf_long_datetime)
                  ).
                  set_footer(dpp::embed_footer().set_text( "ID: " + std::to_string(event.command.usr.id))).
                  set_timestamp(time(0));
 			  event.reply(dpp::message().add_embed(info_embed));
              
-		 }
+		 } 
 	});
 		
 
