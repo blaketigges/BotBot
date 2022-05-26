@@ -32,7 +32,7 @@ int main()
                  set_thumbnail(event.command.usr.get_avatar_url()).
                  add_field(
                      "Roles:",
-                     "@" + std::to_string(event.command.member.roles.at(0)) 
+                     "@" + std::to_string(event.command.member.roles.at(0)) // figure out how to mention roles by id
                  ).
                  add_field(
                      "Join date",
