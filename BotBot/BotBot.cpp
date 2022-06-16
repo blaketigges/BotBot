@@ -7,6 +7,7 @@
 
 int main()
 {
+	
 	// Load the token from the file token.txt
     std::ifstream token;
     token.open("token.txt");
@@ -19,7 +20,7 @@ int main()
 
     /* Output simple log messages to stdout */
     bot.on_log(dpp::utility::cout_logger());
-	
+    
 	// Audio stuff, move to own file maybe
     std::vector<uint8_t> pcmdata;
     mpg123_init();
@@ -35,7 +36,7 @@ int main()
 	buffer_size = mpg123_outblock(mh);
 	buffer = new unsigned char[buffer_size];
 	
-	mpg123_open(mh, "C:/Users/blake/Desktop/Discord Bot/mp3"); // hardcoded path for test
+	mpg123_open(mh, "C:/Users/blake/Desktop/Discord Bot/mp3/test.mp3"); // hardcoded path for test
     mpg123_getformat(mh, &rate, &channels, &encoding);
 
     unsigned int counter = 0;
@@ -49,8 +50,7 @@ int main()
     delete buffer;
     mpg123_close(mh);
     mpg123_delete(mh);
-	mpg123_exit();
-	
+    
     /* Handle slash command */
     bot.on_slashcommand([&pcmdata](const dpp::slashcommand_t& event) {
          if (event.command.get_command_name() == "beep") {
@@ -87,7 +87,9 @@ int main()
 			 if (guild->connect_member_voice(event.command.usr.id)) {
                  dpp::voiceconn* voice = event.from->get_voice(event.command.guild_id);
                      if (voice && voice->voiceclient && voice->voiceclient->is_ready()) {
+                         event.reply("Playing audio file");
                          voice->voiceclient->send_audio_raw((uint16_t*)pcmdata.data(), pcmdata.size());
+						 
                      }
              }
              else {
@@ -101,22 +103,31 @@ int main()
     info.set_name("info")
         .set_description("Get information about yourself")
         .set_application_id(bot.me.id);
-    //bot.global_command_create(beep);
+    //bot.global_command_create(info);
 	dpp::slashcommand beep;
 	beep.set_name("beep")
 		.set_description("robot")
 		.set_application_id(bot.me.id);
-    //bot.global_command_create(info);
+    //bot.global_command_create(beep);
     dpp::slashcommand play;
-	play.set_name("play")
-		.set_description("Play")
-		.set_application_id(bot.me.id);
-	bot.global_command_create(play);
+    play.set_name("play")
+        .set_description("Play audio in voice channel")
+        .set_application_id(bot.me.id);
+    //bot.global_command_create(play);
 	
-
+    //Register slash command here in on_ready
+	/*
+    bot.on_ready([&](const dpp::ready_t& event) {
+        if (dpp::run_once<struct register_bot_commands>()) {
+            bot.global_command_create(play);
+            bot.global_command_create(beep);
+            bot.global_command_create(info);
+        }
+    }); */
 
     /* Start the bot */
     bot.start(false);
 
+    mpg123_exit();
     return 0;
 }
