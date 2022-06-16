@@ -2,6 +2,8 @@
 #include <dpp/fmt/format.h>
 #include <fstream>
 #include <chrono>
+#include <mpg123.h>
+#include <out123.h>
 
 int main()
 {
@@ -18,8 +20,39 @@ int main()
     /* Output simple log messages to stdout */
     bot.on_log(dpp::utility::cout_logger());
 	
+	// Audio stuff, move to own file maybe
+    std::vector<uint8_t> pcmdata;
+    mpg123_init();
+	int err = 0;
+	unsigned char* buffer;
+	size_t buffer_size, done;
+	int channels, encoding;
+	long rate;
+	
+	mpg123_handle *mh = mpg123_new(NULL, &err);
+    mpg123_param(mh, MPG123_FORCE_RATE, 48000, 48000.0); // Force the rate to 48000 for discord
+
+	buffer_size = mpg123_outblock(mh);
+	buffer = new unsigned char[buffer_size];
+	
+	mpg123_open(mh, "C:/Users/blake/Desktop/Discord Bot/mp3"); // hardcoded path for test
+    mpg123_getformat(mh, &rate, &channels, &encoding);
+
+    unsigned int counter = 0;
+    for (int totalBytes = 0; mpg123_read(mh, buffer, buffer_size, &done) == MPG123_OK; ) {
+        for (auto i = 0; i < buffer_size; i++) {
+            pcmdata.push_back(buffer[i]);
+        }
+        counter += buffer_size;
+        totalBytes += done;
+    }
+    delete buffer;
+    mpg123_close(mh);
+    mpg123_delete(mh);
+	mpg123_exit();
+	
     /* Handle slash command */
-    bot.on_slashcommand([](const dpp::slashcommand_t& event) {
+    bot.on_slashcommand([&pcmdata](const dpp::slashcommand_t& event) {
          if (event.command.get_command_name() == "beep") {
             event.reply("boop!");
          }
@@ -47,6 +80,20 @@ int main()
 			  event.reply(dpp::message().add_embed(info_embed));
              
 		 } 
+		 if (event.command.get_command_name() == "play") {
+			 // join voice channel user is in if not already in one
+			 // then play audio file
+             dpp::guild * guild = dpp::find_guild(event.command.guild_id);
+			 if (guild->connect_member_voice(event.command.usr.id)) {
+                 dpp::voiceconn* voice = event.from->get_voice(event.command.guild_id);
+                     if (voice && voice->voiceclient && voice->voiceclient->is_ready()) {
+                         voice->voiceclient->send_audio_raw((uint16_t*)pcmdata.data(), pcmdata.size());
+                     }
+             }
+             else {
+                 event.reply("You must be in a voice channel to play music!"); // if user is not in a voice channel
+             }
+		 }
 	});
 		
 
@@ -60,12 +107,13 @@ int main()
 		.set_description("robot")
 		.set_application_id(bot.me.id);
     //bot.global_command_create(info);
+    dpp::slashcommand play;
+	play.set_name("play")
+		.set_description("Play")
+		.set_application_id(bot.me.id);
+	bot.global_command_create(play);
+	
 
-    /* Register slash command here in on_ready 
-    bot.on_ready([&](const dpp::ready_t& event) {
-        if (dpp::run_once<struct register_bot_commands>()) {
-        }
-    }); */
 
     /* Start the bot */
     bot.start(false);
