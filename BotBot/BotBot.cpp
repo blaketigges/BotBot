@@ -96,6 +96,12 @@ int main()
                  event.reply("You must be in a voice channel to play music!"); // if user is not in a voice channel
              }
 		 }
+		 if (event.command.get_command_name() == "stop") {
+			 // stop audio file
+			 // disconnect from voice channel
+             event.from->disconnect_voice(event.command.guild_id);
+			 event.reply("Left voice channel");
+		  }
 	});
 		
 
@@ -114,16 +120,22 @@ int main()
         .set_description("Play audio in voice channel")
         .set_application_id(bot.me.id);
     //bot.global_command_create(play);
+	dpp::slashcommand stop;
+	stop.set_name("stop")
+		.set_description("Leave voice channel")
+		.set_application_id(bot.me.id);
+	//bot.global_command_create(stop);
 	
     //Register slash command here in on_ready
-	/*
+	
     bot.on_ready([&](const dpp::ready_t& event) {
         if (dpp::run_once<struct register_bot_commands>()) {
-            bot.global_command_create(play);
-            bot.global_command_create(beep);
-            bot.global_command_create(info);
+            //bot.global_command_create(play);
+            //bot.global_command_create(beep);
+            //bot.global_command_create(info);
+			//bot.global_command_create(stop);
         }
-    }); */
+    }); 
 
     /* Start the bot */
     bot.start(false);
